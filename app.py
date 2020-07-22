@@ -5,7 +5,7 @@
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -22,7 +22,6 @@ moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://josealarconchacon@localhost:5432/fyyur'
 # TODO: connect to a local postgresql database
 
 #----------------------------------------------------------------------------#
