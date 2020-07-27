@@ -160,6 +160,9 @@ def venues():
   }]
   return render_template('pages/venues.html', areas=data);
 
+
+
+
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
@@ -174,6 +177,9 @@ def search_venues():
     }]
   }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
+
+
+
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
@@ -267,17 +273,85 @@ def create_venue_form():
   form = VenueForm()
   return render_template('forms/new_venue.html', form=form)
 
+
+
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  form = VenueForm()
+
+  name = form.name.data.strip()
+  city = form.city.data.strip()
+  state = form.state.data
+  address = form.address.data.strip()
+  phone = form.phone.data
+  phone = re.sub('\D', '', phone)
+  genres = form.genres.data               
+  facebook_link = form.facebook_link.data.strip()
+  seeking_talent = True if form.seeking_talent.data == 'Yes' else False
+  seeking_description = form.seeking_description.data.strip()
+  image_link = form.image_link.data.strip()
+  website = form.website.data.strip()
+
+  # Redirect back if an error occurred
+  if not form.validate():
+    flash( form.errors )
+    return redirect(url_for('create_venue_submission'))
+  else:
+    error = False
+    # Add to database
+    try:
+      create_venue = Venue(name=name, city=city, 
+                          state=state, address=address, 
+                          phone=phone, \
+                          seeking_talent=seeking_talent, 
+                          seeking_description=seeking_description, 
+                          image_link=image_link, \
+                          website=website, facebook_link=facebook_link)
+              
+      for selected_genre in genres:
+        #query genres
+        query_genre = Genre.query.filter_by(name=selected_genre).one_or_none()
+        # append it to if genre was found
+        if query_genre:
+          create_venue.genres.append(query_genre)
+        else:
+          # if genre was not found, create it
+          create_new_genre = Genre(name=selected_genre)
+          db.session.add(create_new_genre)
+          create_venue.genres.append(create_new_genre)
+
+      db.session.add(create_venue)
+      db.session.commit()
+
+    except Exception as e:
+          error_in_insert = True
+          print(f'Exception "{e}" in create_venue_submission()')
+          db.session.rollback()
+    finally:
+          db.session.close()
+
+    if not error_in_insert:
+          # on successful db insert, flash success
+          flash('Venue ' + request.form['name'] + ' was successfully listed!')
+          return render_template('pages/home.html')
+          # return redirect(url_for('index'))
+    else:
+          flash('An error occurred. Venue ' + name + ' could not be listed.')
+          print("Error in create_venue_submission()")
+          # return redirect(url_for('create_venue_submission'))
+          abort(500)
 
   # on successful db insert, flash success
   flash('Venue ' + request.form['name'] + ' was successfully listed!')
   # TODO: on unsuccessful db insert, flash an error instead.
   # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+  # return render_template('pages/home.html')
+
+
+
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
