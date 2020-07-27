@@ -8,9 +8,9 @@ import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
+import logging
 from flask_migrate import Migrate
 from datetime import datetime
-import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
@@ -29,8 +29,25 @@ migrate = Migrate(app, db)
 # Models.
 #----------------------------------------------------------------------------#
 
+class Genre(db.Model):
+    __tablename__ = 'Genre'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+
+artist_genre = db.Table('artist_genre',
+    db.Column('genre_id', db.Integer, db.ForeignKey('Genre.id'), primary_key=True),
+    db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True)
+)
+
+venue_table = db.Table('venue_table',
+    db.Column('genre_id', db.Integer, db.ForeignKey('Genre.id'), primary_key=True),
+    db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
+)
+
+
 class Venue(db.Model):
-    __tablename__ = 'venue'
+    __tablename__ = 'Venue'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -43,18 +60,18 @@ class Venue(db.Model):
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     # relationship with associative table
 
-    # genres = db.relationship('Genre', secondary=venue_table, backref=db.backref('venues'))
-    # website = db.Column(db.String(120))
-    # seeking_talent = db.Column(db.Boolean, default=False)
-    # seeking_description = db.Column(db.String(120))
-    # show = db.relationship('Show', backref='Venue', lazy=True)
+    genres = db.relationship('Genre', secondary=venue_table, backref=db.backref('venues'))
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean, default=False)
+    seeking_description = db.Column(db.String(120))
+    show = db.relationship('Show', backref='Venue', lazy=True)
 
-    # def __repr__(self):
-    #     return f'<Venue {self.id} {self.name}>'
+    def __repr__(self):
+        return f'<Venue {self.id} {self.name}>'
 
 
 class Artist(db.Model):
-    __tablename__ = 'artist'
+    __tablename__ = 'Artist'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -67,14 +84,14 @@ class Artist(db.Model):
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     # relationship with associative table
 
-    # genres = db.relationship('Genre', secondary=genre_table, backref=db.backref('artists'))
-    # website = db.Column(db.String(120))
-    # seeking_venue= db.Column(db.Boolean, default=False)
-    # seeking_description = db.Column(db.String(120))
-    # shows = db.relationship('Show', backref='artist', lazy=True)
+    genres = db.relationship('Genre', secondary=artist_genre, backref=db.backref('artists'))
+    website = db.Column(db.String(120))
+    seeking_venue= db.Column(db.Boolean, default=False)
+    seeking_description = db.Column(db.String(120))
+    shows = db.relationship('Show', backref='artist', lazy=True)
 
-    # def __repr__(self):
-    #     return f'<Artist {self.id} {self.name}>'
+    def __repr__(self):
+        return f'<Artist {self.id} {self.name}>'
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
@@ -82,30 +99,12 @@ class Show(db.Model):
   _tablename__ = 'show'
   id = db.Column(db.Integer, primary_key=True)
   start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-  # artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
-  # venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
 
-  # def __repr__(self):
-  #       return f'<Show {self.id} {self.start_time} artist_id={artist_id} venue_id={venue_id}>'
+  def __repr__(self):
+        return f'<Show {self.id} {self.start_time} artist_id={artist_id} venue_id={venue_id}>'
 
-
-class Genre(db.Model):
-    __tablename__ = 'genre'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-
-# genre_table = db.Table('genre_table',
-#     db.Column('genre_id', db.Integer, db.ForeignKey('Genre.id'), primary_key=True),
-#     db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True)
-# )
-
-# venue_table = db.Table('venue_table',
-#     db.Column('genre_id', db.Integer, db.ForeignKey('Genre.id'), primary_key=True),
-#     db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True)
-# )
-
-db.create_all()
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
@@ -136,6 +135,8 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+
+
   data=[{
     "city": "San Francisco",
     "state": "CA",
