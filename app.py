@@ -69,7 +69,7 @@ class Artist(db.Model):
                        image_link, facebook_link,
                        seeking_venue=False, seeking_description=""):
         self.name = name
-        self.city  city
+        self.city = city
         self.state = state
         self.phone = phone
         self.genres = genres
@@ -244,7 +244,7 @@ def venues():
   # loop over venues to check venue information
   for all_venue in venues:
     list_of_shows = all_venue.shows.filter(Show.start_time > time).all()
-    if venue_location = all_venue.city + all_venue.state:
+    if venue_location == all_venue.city + all_venue.state:
       data[len(data) - 1]["venues"].append({
         "id": venue.id,
         "name":venue.name,
