@@ -7,7 +7,9 @@ import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
+
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, ARRAY, ForeignKey
+
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from flask_migrate import Migrate
@@ -81,6 +83,7 @@ class Artist(db.Model):
     def __repr__(self):
         return f'<Artist {self.id} {self.name}>'
 
+
 class Venue(db.Model):
     __tablename__ = 'Venue'
     id = db.Column(db.Integer, primary_key=True)
@@ -92,32 +95,47 @@ class Venue(db.Model):
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(120))
-    # seeking_talent = db.Column(db.Boolean, nullable=False, default=False)
+    genres = db.Column(ARRAY(String))
+    seeking_talent = db.Column(Boolean, default=False)
     seeking_description = db.Column(db.String(120))
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     # relationship with associative table
 
-    artists = db.relationship('Artist', secondary='show')
-    shows = db.relationship('Show', backref=('Venue'))
+    # artists = db.relationship('Artist', secondary='show')
+    shows = db.relationship('Show', backref='Venue', lazy='dynamic')
 
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'city': self.city,
-            'state': self.state,
-            'address': self.address,
-            'phone': self.phone,
-            'genres': self.genres.split(','),  # convert string to list
-            'image_link': self.image_link,
-            'facebook_link': self.facebook_link,
-            'website': self.website,
-            # 'seeking_talent': self.seeking_talent,
-            'seeking_description': self.seeking_description,
+    def __init__(self, name, city, state, 
+                       address, phone, image_link,
+                       facebook_link, website, genres,
+                       seeking_talent=False, seeking_description="")
+        self.name = name
+        self.city = city
+        self.state = state
+        self.address = address
+        self.phone = phone
+        self.image_link = image_link
+        self.facebook_link = facebook_link
+        self.website = website
+        self.seeking_description = seeking_description
+
+    def insert(self):
+      db.session.add(self)
+      db.session.commit()
+
+    def detail(self):
+        return{
+            'id' :self.id,
+            'name' :self.name,
+            'genres' : self.genres,
+            'address' :self.address,
+            'city' :self.city,
+            'phone' :self.phone,
+            'website' :self.website,
+            'facebook_link':self.facebook_link,
+            'seeking_talent' :self.seeking_talent,
+            'seeking_description' :self.seeking_description,
+            'image-link' :self.image_link
         }
-
-    def __repr__(self):
-        return f'<Venue {self.id} {self.name}>'
 
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
