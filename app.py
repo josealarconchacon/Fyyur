@@ -58,14 +58,32 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
-    seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
-    seeking_description = db.Column(db.String(120))
+    seeking_venue = db.Column(db.Boolean, default=False)
+    seeking_description = db.Column(db.String(120), default=' ')
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
     # relationship with associative table
-    venues = db.relationship('Venue', secondary='show')
-    shows = db.relationship('Show', backref=('artists'))
+    shows = db.relationship('Show', backref='Artist', lazy=True)
 
-    def to_dict(self):
+    def __init__(self, name, city, state,
+                       phone, genres, website,
+                       image_link, facebook_link,
+                       seeking_venue=False, seeking_description="");
+        self.name = name
+        self.city  city
+        self.state = state
+        self.phone = phone
+        self.genres = genres
+        self.website = website
+        self.image_link = image_link
+        self.facebook_link = facebook_link
+        self.seeking_venue = seeking_venue
+        self.seeking_description = seeking_description
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def detail(self):
         return {
             'id': self.id,
             'name': self.name,
@@ -107,7 +125,7 @@ class Venue(db.Model):
     def __init__(self, name, city, state, 
                        address, phone, image_link,
                        facebook_link, website, genres,
-                       seeking_talent=False, seeking_description="")
+                       seeking_talent=False, seeking_description="");
         self.name = name
         self.city = city
         self.state = state
