@@ -67,7 +67,7 @@ class Artist(db.Model):
     def __init__(self, name, city, state,
                        phone, genres, website,
                        image_link, facebook_link,
-                       seeking_venue=False, seeking_description="");
+                       seeking_venue=False, seeking_description=""):
         self.name = name
         self.city  city
         self.state = state
@@ -125,7 +125,7 @@ class Venue(db.Model):
     def __init__(self, name, city, state, 
                        address, phone, image_link,
                        facebook_link, website, genres,
-                       seeking_talent=False, seeking_description="");
+                       seeking_talent=False, seeking_description=""):
         self.name = name
         self.city = city
         self.state = state
@@ -159,29 +159,49 @@ class Venue(db.Model):
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
   _tablename__ = 'show'
+
   id = db.Column(db.Integer, primary_key=True)
-  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
-  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
-  start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-  venue = db.relationship('Venue')
-  artist = db.relationship('Artist')
+  venue_id = db.Column(Integer, ForeignKey(Venue.id), nullable=False)
+  artist_id = db.Column(Integer, ForeignKey(Artist.id), nullable=False)
+  start_time = db.Column(String(), nullable=False)
+
+  def __init__(self, venue_id, 
+                     artist_id, 
+                     start_time):
+        self.venue_id = venue_id
+        self.artist_id = artist_id
+        self.start_time = start_time
+
+  def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+  def detail(self):
+        return{
+            'venue_id' :self.venue_id,
+            'venue_name' :self.Venue.name,
+            'artist_id' :self.artist_id,
+            'artist_name' :self.Artist.name,
+            'artist_image_link' :self.Artist.image_link,
+            'start_time' :self.start_time
+        }
 
   def show_artist(self):
         return {
-            'artist_id': self.artist_id,
-            'artist_name': self.artist.name,
-            'artist_image_link': self.artist.image_link,
+            'artist_id': self.venue_id,
+            'artist_name': self.Artist.name,
+            'artist_image_link': self.Artist.image_link,
             # convert datetime to string
-            'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S')
+            'start_time': self.start_time
         }
 
   def show_venue(self):
         return {
             'venue_id': self.venue_id,
-            'venue_name': self.venue.name,
-            'venue_image_link': self.venue.image_link,
+            'venue_name': self.Venue.name,
+            'venue_image_link': self.Venue.image_link,
             # convert datetime to string
-            'start_time': self.start_time.strftime('%Y-%m-%d %H:%M:%S')
+            'start_time': self.start_time
         }
 
   # def __repr__(self):
