@@ -236,29 +236,57 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
+  time = datetime.now().strftime('%Y-%m-%d %H:%S:%M')
+  venues = Venue.query.group_by(Venue.id, Venue.state, Venue.city).all()
+  venue_location = ''
+  data = []
+
+  # loop over venues to check venue information
+  for all_venue in venues:
+    list_of_shows = all_venue.shows.filter(Show.start_time > time).all()
+    if venue_location = all_venue.city + all_venue.state:
+      data[len(data) - 1]["venues"].append({
+        "id": venue.id,
+        "name":venue.name,
+        "num_upcoming_shows": len(list_of_shows) 
+      })
+    else:
+      venue_location = all_venue.city + all_venue.state
+      data.append({
+        "city":venue.city,
+        "state":venue.state,
+        "venues": [{
+          "id": venue.id,
+          "name":venue.name,
+          "num_upcoming_shows": len(list_of_shows)
+        }]
+      })
+  return render_template('pages/venues.html', areas=data)
 
 
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
+
+
+  # data=[{
+  #   "city": "San Francisco",
+  #   "state": "CA",
+  #   "venues": [{
+  #     "id": 1,
+  #     "name": "The Musical Hop",
+  #     "num_upcoming_shows": 0,
+  #   }, {
+  #     "id": 3,
+  #     "name": "Park Square Live Music & Coffee",
+  #     "num_upcoming_shows": 1,
+  #   }]
+  # }, {
+  #   "city": "New York",
+  #   "state": "NY",
+  #   "venues": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }]
   return render_template('pages/venues.html', areas=data);
 
 
